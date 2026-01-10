@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Income, SavingsGoal, Loan, EmergencyFund
+from .models import Income, SavingsGoal, Loan, EmergencyFund, InsurancePolicy
 
 
 class IncomeSerializer(serializers.ModelSerializer):
@@ -73,10 +73,6 @@ class SavingsGoalSerializer(serializers.ModelSerializer):
 
 
 class EmergencyFundSerializer(serializers.ModelSerializer):
-    """
-    React payload:
-      { name, target_amount, saved_amount, note }
-    """
     class Meta:
         model = EmergencyFund
         fields = [
@@ -117,7 +113,7 @@ class LoanSerializer(serializers.ModelSerializer):
             "id",
             "loan_type",
             "person_name",
-            "title",        # ✅ IMPORTANT: your UI sends title
+            "title",
             "amount",
             "paid_amount",
             "status",
@@ -127,7 +123,6 @@ class LoanSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        # ✅ status is better read-only because Loan.save() auto-sets it
         read_only_fields = ["id", "status", "created_at", "updated_at"]
 
     def validate(self, attrs):
@@ -143,7 +138,6 @@ class LoanSerializer(serializers.ModelSerializer):
         if amount is not None and paid is not None and paid > amount:
             raise serializers.ValidationError({"paid_amount": "Paid amount cannot exceed amount."})
 
-        # optional: trim person_name/title if present
         person = attrs.get("person_name")
         if person is not None and not str(person).strip():
             raise serializers.ValidationError({"person_name": "Person name is required."})
@@ -151,5 +145,69 @@ class LoanSerializer(serializers.ModelSerializer):
         title = attrs.get("title")
         if title is not None and not str(title).strip():
             raise serializers.ValidationError({"title": "Title is required."})
+
+        return attrs
+
+
+# =====================================================
+# ✅ Insurance Policy Serializer (UPDATED)
+# API fields = camelCase (frontend)
+# Model fields = snake_case (db)
+# =====================================================
+class InsurancePolicySerializer(serializers.ModelSerializer):
+    # Frontend -> Model mapping
+    policyNumber = serializers.CharField(source="policy_number", required=True)
+    startDate = serializers.DateField(source="start_date", required=True)
+    endDate = serializers.DateField(source="end_date", required=True)
+    interval = serializers.ChoiceField(
+        source="payment_interval",
+        choices=InsurancePolicy.PAYMENT_INTERVAL_CHOICES,
+        required=True,
+    )
+
+    class Meta:
+        model = InsurancePolicy
+        fields = [
+            "id",
+            "name",
+            "policyNumber",
+            "startDate",
+            "endDate",
+            "amount",
+            "interval",
+            "note",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate(self, attrs):
+        # attrs has MODEL field names because of source= mapping
+        name = (attrs.get("name") or "").strip()
+        policy_number = (attrs.get("policy_number") or "").strip()
+        start = attrs.get("start_date", getattr(self.instance, "start_date", None))
+        end = attrs.get("end_date", getattr(self.instance, "end_date", None))
+        amount = attrs.get("amount", getattr(self.instance, "amount", 0))
+
+        errors = {}
+
+        if not name:
+            errors["name"] = "Insurance name is required."
+
+        if not policy_number:
+            errors["policyNumber"] = "Policy number is required."
+
+        if amount is not None and float(amount) < 0:
+            errors["amount"] = "Amount cannot be negative."
+
+        if start and end and end < start:
+            errors["endDate"] = "End date must be after start date."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        # put trimmed values back
+        attrs["name"] = name
+        attrs["policy_number"] = policy_number
 
         return attrs

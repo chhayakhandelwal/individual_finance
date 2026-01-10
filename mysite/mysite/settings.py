@@ -10,8 +10,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-8w_ig4+@63x$&^_)q87wz5j=ey(6&q$x36bu9fj3fc(xrgpnue"
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-
 # ----------------------------
 # Applications
 # ----------------------------
@@ -119,7 +117,6 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "content-type",
     "x-csrftoken",
 ]
-
 # ----------------------------
 # CSRF TRUSTED ORIGINS (FIXED)
 # ----------------------------

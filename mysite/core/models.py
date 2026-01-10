@@ -4,6 +4,9 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
 
 
+# =====================================================
+# App User (NOT Django Auth User)
+# =====================================================
 class AppUser(models.Model):
     username = models.CharField(max_length=150, unique=True, db_index=True)
     user_id = models.CharField(max_length=50, unique=True, db_index=True)
@@ -14,16 +17,19 @@ class AppUser(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def set_password(self, raw_password: str) -> None:
+    def set_password(self, raw_password):
         self.password_hash = make_password(raw_password)
 
-    def check_password(self, raw_password: str) -> bool:
+    def check_password(self, raw_password):
         return check_password(raw_password, self.password_hash)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f"{self.username} ({self.user_id})"
 
 
+# =====================================================
+# Income
+# =====================================================
 class Income(models.Model):
     CATEGORY_CHOICES = [
         ("SALARY", "SALARY"),
@@ -41,7 +47,7 @@ class Income(models.Model):
     )
 
     source = models.CharField(max_length=255)
-    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default="SALARY")
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     income_date = models.DateField()
     description = models.TextField(blank=True, default="")
@@ -51,15 +57,14 @@ class Income(models.Model):
 
     class Meta:
         ordering = ["-income_date", "-id"]
-        indexes = [
-            models.Index(fields=["user", "income_date"]),
-            models.Index(fields=["user", "category"]),
-        ]
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f"{self.user} | {self.category} | {self.amount}"
 
 
+# =====================================================
+# Savings Goal
+# =====================================================
 class SavingsGoal(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -77,11 +82,14 @@ class SavingsGoal(models.Model):
 
     class Meta:
         ordering = ["-target_date", "-id"]
-        indexes = [models.Index(fields=["user", "target_date"])]
 
-    def __str__(self) -> str:
-        return f"{self.user} | {self.name} | {self.saved_amount}/{self.target_amount}"
+    def __str__(self):
+        return f"{self.user} | {self.name}"
 
+
+# =====================================================
+# Emergency Fund
+# =====================================================
 class EmergencyFund(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -97,14 +105,13 @@ class EmergencyFund(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        ordering = ["-updated_at"]
-
     def __str__(self):
         return f"{self.user} | {self.name}"
 
 
-
+# =====================================================
+# Loan
+# =====================================================
 class Loan(models.Model):
     TYPE_CHOICES = [("GIVEN", "GIVEN"), ("TAKEN", "TAKEN")]
     STATUS_CHOICES = [("ONGOING", "ONGOING"), ("PAID", "PAID")]
@@ -115,16 +122,57 @@ class Loan(models.Model):
         related_name="loans",
     )
 
-    loan_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default="GIVEN")
+    loan_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     person_name = models.CharField(max_length=120)
-    title = models.CharField(max_length=255, blank=True, default="")
+    title = models.CharField(max_length=255, blank=True)
 
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="ONGOING")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
 
     start_date = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
+    note = models.TextField(blank=True, default="")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        self.status = "PAID" if self.paid_amount >= self.amount else "ONGOING"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user} | {self.loan_type} | {self.amount}"
+
+
+# =====================================================
+# Insurance Policy ✅
+# =====================================================
+class InsurancePolicy(models.Model):
+    PAYMENT_INTERVAL_CHOICES = [
+        ("Monthly", "Monthly"),
+        ("Quarterly", "Quarterly"),
+        ("Half-Yearly", "Half-Yearly"),
+        ("Yearly", "Yearly"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="insurance_policies",
+    )
+
+    name = models.CharField(max_length=255)
+    policy_number = models.CharField(max_length=100)
+
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_interval = models.CharField(
+        max_length=20,
+        choices=PAYMENT_INTERVAL_CHOICES,
+    )
 
     note = models.TextField(blank=True, default="")
 
@@ -132,18 +180,8 @@ class Loan(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-start_date", "-id"]
-        indexes = [
-            models.Index(fields=["user", "loan_type"]),
-            models.Index(fields=["user", "status"]),
-            models.Index(fields=["user", "start_date"]),
-        ]
+        unique_together = ("user", "policy_number")
+        ordering = ["end_date"]
 
-    def save(self, *args, **kwargs):
-        amt = self.amount or 0
-        paid = self.paid_amount or 0
-        self.status = "PAID" if amt > 0 and paid >= amt else "ONGOING"
-        super().save(*args, **kwargs)
-
-    def __str__(self) -> str:
-        return f"{self.user} | {self.loan_type} | {self.person_name} | {self.amount}"
+    def __str__(self):
+        return f"{self.user} | {self.name} | {self.policy_number}"
