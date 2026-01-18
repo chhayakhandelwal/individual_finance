@@ -1,0 +1,108 @@
+import React from "react";
+import {
+  LayoutDashboard,
+  Wallet,
+  PiggyBank,
+  TrendingUp,
+  Shield,        // Emergency
+  ShieldCheck,   // Insurance (NEW)
+  CreditCard,
+  HandCoins,
+  User,
+  LogOut,
+} from "lucide-react";
+import "./sidebar.css";
+
+export default function Sidebar({ username, activePage, setActivePage }) {
+  /* =====================
+     Sidebar menu config
+     ===================== */
+  const menuItems = [
+    { label: "Overview", icon: <LayoutDashboard size={18} /> },
+    { label: "Income", icon: <Wallet size={18} /> },
+    { label: "Expenses", icon: <CreditCard size={18} /> },
+    { label: "Savings", icon: <PiggyBank size={18} /> },
+    { label: "Investment", icon: <TrendingUp size={18} /> },
+    { label: "Emergency", icon: <Shield size={18} /> },
+    { label: "Insurance", icon: <ShieldCheck size={18} /> }, // ✅ ADDED
+    { label: "Lending", icon: <HandCoins size={18} /> },
+    { label: "Profile", icon: <User size={18} /> },
+    { label: "Logout", icon: <LogOut size={18} /> },
+  ];
+
+  /* =====================
+     User initials (safe)
+     ===================== */
+  const safeName = username?.trim() || "User";
+  const initials = safeName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("");
+
+  return (
+    <aside className="sidebar" aria-label="Primary navigation">
+      {/* Decorative background */}
+      <div className="sidebar-bg" aria-hidden="true" />
+
+      {/* Brand */}
+      <div className="sidebar-brand">
+        <div className="brand-mark" aria-hidden="true" />
+        <div className="brand-text">
+          <div className="brand-title">FinPro</div>
+          <div className="brand-subtitle">Personal Finance</div>
+        </div>
+      </div>
+
+      {/* User card */}
+      <div className="sidebar-header">
+        <div className="avatar" aria-hidden="true">
+          {initials}
+        </div>
+
+        <div className="user-meta">
+          <p className="hello">Hello,</p>
+          <h2 className="username" title={safeName}>
+            {safeName}
+          </h2>
+          <p className="caption">Track income, expenses & investments</p>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="menu" aria-label="Sidebar menu">
+        {menuItems.map((item) => {
+          const isActive = activePage === item.label;
+
+          return (
+            <button
+              key={item.label}
+              type="button"
+              className={`menu-item ${isActive ? "active" : ""}`}
+              onClick={() => setActivePage(item.label)}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <span className="menu-icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span className="menu-label">{item.label}</span>
+              <span className="menu-pill" aria-hidden="true" />
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="sidebar-footer">
+        <div className="footer-card">
+          <div className="dot" aria-hidden="true" />
+          <div className="footer-text">
+            <div className="footer-title">Secure</div>
+            <div className="footer-subtitle">Your data is protected</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}

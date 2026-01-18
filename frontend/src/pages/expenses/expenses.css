@@ -1,0 +1,407 @@
+/* Wrapper */
+.exp-wrap {
+  width: 100%;
+}
+
+/* Top bar (like InvestmentHome) */
+.exp-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.exp-title h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.exp-subtitle {
+  margin-top: 6px;
+  opacity: 0.75;
+}
+
+.exp-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Buttons */
+.exp-btn {
+  border: 1px solid rgba(0,0,0,0.12);
+  
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.exp-btn.primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.exp-btn.small {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 800;
+}
+
+.exp-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Tabs */
+.exp-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0 14px;
+}
+
+.exp-tab {
+  border: 1px solid rgba(0,0,0,0.12);
+  
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+  opacity: 0.9;
+}
+
+.exp-tab.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  opacity: 1;
+}
+
+/* Alerts */
+.exp-alert {
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.10);
+  color: #b91c1c;
+  padding: 12px 14px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+
+.exp-empty {
+  padding: 14px;
+  opacity: 0.75;
+}
+
+/* Summary cards */
+.exp-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 10px 0 14px;
+}
+
+.exp-card {
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 16px;
+  padding: 14px;
+  
+  box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+}
+
+.exp-card .k {
+  opacity: 0.75;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.exp-card .v {
+  font-size: 18px;
+  font-weight: 950;
+}
+
+/* Panels */
+.exp-panel {
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 18px;
+  padding: 14px;
+  
+  box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+  margin-bottom: 14px;
+}
+
+.exp-panel-head h3 {
+  margin: 0;
+  font-weight: 950;
+}
+
+.exp-panel-sub {
+  margin-top: 6px;
+  opacity: 0.75;
+  font-size: 13px;
+}
+
+/* OCR row */
+.exp-ocr-row {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Category cards */
+.exp-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.exp-cat-card {
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 18px;
+  padding: 14px;
+  background: linear-gradient(135deg, #ffffff, #f6f8ff);
+}
+
+.exp-cat-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.exp-cat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  flex: 0 0 auto;
+}
+
+.exp-cat-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-cat-name {
+  font-weight: 950;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.exp-cat-sub {
+  opacity: 0.75;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.exp-cat-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.exp-mini-input {
+  width: 110px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+.exp-mini-btn {
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.12);
+  
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.exp-mini-btn.ghost {
+  background: transparent;
+}
+
+.exp-mini-btn.danger {
+  border-color: rgba(239,68,68,0.35);
+  background: rgba(239,68,68,0.10);
+  color: #b91c1c;
+}
+
+.exp-progress {
+  margin-top: 12px;
+}
+
+.exp-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 900;
+  font-size: 12px;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.exp-bar {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.exp-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.exp-bar-fill.ok {
+  background: #10b981;
+}
+
+.exp-bar-fill.warn {
+  background: #f59e0b;
+}
+
+.exp-bar-fill.bad {
+  background: #ef4444;
+}
+
+.exp-exceeded {
+  margin-top: 8px;
+  font-weight: 950;
+  color: #b91c1c;
+}
+
+.exp-cat-footer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Form */
+.exp-form {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.exp-field label {
+  display: block;
+  font-size: 12px;
+  opacity: 0.75;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.exp-field input,
+.exp-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+.exp-field.wide {
+  grid-column: span 2;
+}
+
+.exp-field.actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Table */
+.exp-table {
+  margin-top: 10px;
+}
+
+.exp-row {
+  display: grid;
+  grid-template-columns: 140px 200px 180px 1fr 160px 220px;
+  gap: 10px;
+  padding: 10px 10px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  align-items: center;
+}
+
+.exp-row.head {
+  border-top: 0;
+  font-weight: 950;
+  opacity: 0.75;
+  padding-top: 0;
+}
+
+.exp-row .right {
+  text-align: right;
+}
+
+.exp-cell-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+/* OCR result */
+.exp-ocr-result {
+  margin-top: 12px;
+}
+
+.exp-ocr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.exp-ocr-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.exp-note {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .exp-grid-4 {
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+
+  .exp-cat-grid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+  }
+
+  .exp-form {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
+  .exp-row {
+    grid-template-columns: 120px 180px 160px 1fr 140px 200px;
+  }
+}
+
+@media (max-width: 700px) {
+  .exp-cat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .exp-row {
+    grid-template-columns: 1fr;
+  }
+
+  .exp-row.head {
+    display: none;
+  }
+}

@@ -1,0 +1,391 @@
+/* Page container */
+.sv {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 8px 4px;
+}
+
+/* Header */
+.sv__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.sv__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0b1220;
+}
+
+.sv__subtitle {
+  margin: 6px 0 0 0;
+  color: rgba(11, 18, 32, 0.65);
+  font-size: 13px;
+}
+
+/* Actions */
+.sv__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sv__btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.sv__btn:active { transform: translateY(1px); }
+
+.sv__btn--primary {
+  background: #0d47a1;
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(13, 71, 161, 0.18);
+}
+
+.sv__btn--primary:hover { box-shadow: 0 14px 28px rgba(13, 71, 161, 0.24); }
+
+.sv__btn--ghost {
+  background: #ffffff;
+  color: #0b1220;
+  border-color: #e7edf6;
+}
+
+.sv__btn--ghost:hover { background: #f7faff; }
+
+/* Alert */
+.sv__alert {
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 12px;
+  color: #0b1220;
+}
+
+/* KPI cards */
+.sv__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sv__kpi {
+  background: #fff;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.sv__kpi--accent {
+  background: linear-gradient(135deg, rgba(96,165,250,0.18), rgba(94,234,212,0.14));
+  border-color: rgba(13, 71, 161, 0.12);
+}
+
+.sv__kpiIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(13, 71, 161, 0.10);
+  color: #0d47a1;
+}
+
+.sv__kpiLabel {
+  font-size: 12px;
+  color: rgba(11, 18, 32, 0.65);
+  margin-bottom: 4px;
+}
+
+.sv__kpiValue {
+  font-size: 18px;
+  font-weight: 900;
+  color: #0b1220;
+}
+
+/* Grid of cards */
+.sv__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* Goal card */
+.sv__card {
+  background: #fff;
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.sv__cardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.sv__cardTitleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sv__cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+  color: #0b1220;
+}
+
+.sv__chip {
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(13, 71, 161, 0.10);
+  color: #0d47a1;
+}
+
+.sv__chip.is-danger {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+.sv__cardBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.sv__miniBtn {
+  border: 1px solid #e7edf6;
+  background: #fff;
+  color: #0b1220;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.sv__miniBtn:hover { background: #f7faff; }
+
+.sv__miniBtn--danger {
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #b91c1c;
+}
+
+.sv__miniBtn--danger:hover { background: rgba(220, 38, 38, 0.08); }
+
+/* Body */
+.sv__cardBody {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.sv__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sv__stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sv__statLabel {
+  font-size: 12px;
+  color: rgba(11, 18, 32, 0.65);
+}
+
+.sv__statValue {
+  font-weight: 900;
+  color: #0b1220;
+}
+
+/* Progress bar */
+.sv__progressWrap {
+  margin-top: 6px;
+}
+
+.sv__progressMeta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.sv__progressLabel {
+  font-size: 12px;
+  color: rgba(11, 18, 32, 0.65);
+  font-weight: 700;
+}
+
+.sv__progressPct {
+  font-size: 12px;
+  font-weight: 900;
+  color: #0b1220;
+}
+
+.sv__bar {
+  height: 12px;
+  border-radius: 999px;
+  background: #eaf2ff;
+  overflow: hidden;
+  border: 1px solid #e7edf6;
+}
+
+.sv__barFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0d47a1, #00aaff);
+}
+
+/* Chart ring graphic */
+.sv__chart {
+  height: 170px;
+  display: grid;
+  place-items: center;
+}
+
+.sv__chartRing {
+  width: 170px;
+  height: 170px;
+  position: relative;
+}
+
+.sv__chartRing canvas {
+  width: 170px !important;
+  height: 170px !important;
+}
+
+.sv__chartCenter {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.sv__chartPct {
+  font-size: 18px;
+  font-weight: 1000;
+  color: #0b1220;
+}
+
+.sv__chartTxt {
+  font-size: 12px;
+  color: rgba(11, 18, 32, 0.65);
+  margin-top: -6px;
+}
+
+/* Footer */
+.sv__cardFooter {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #e7edf6;
+  font-size: 12px;
+  color: rgba(11, 18, 32, 0.65);
+}
+
+/* Modal */
+.sv__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.50);
+  display: grid;
+  place-items: center;
+  z-index: 99999;
+  padding: 16px;
+}
+
+.sv__modal {
+  width: 520px;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #eef2f7;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  padding: 16px;
+}
+
+.sv__modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.sv__close {
+  border: 1px solid #e7edf6;
+  background: #fff;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sv__form label {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(11, 18, 32, 0.75);
+}
+
+.sv__form input {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 8px 0 12px 0;
+  border-radius: 12px;
+  border: 1px solid #e7edf6;
+  outline: none;
+}
+
+.sv__form input:focus {
+  border-color: rgba(13, 71, 161, 0.35);
+  box-shadow: 0 0 0 4px rgba(13, 71, 161, 0.10);
+}
+
+.sv__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sv__modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .sv__kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sv__grid { grid-template-columns: 1fr; }
+  .sv__cardBody { grid-template-columns: 1fr; }
+  .sv__chart { height: 190px; }
+}

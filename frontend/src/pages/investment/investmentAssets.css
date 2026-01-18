@@ -1,0 +1,185 @@
+.invA-wrap {
+  margin-top: 14px;
+}
+
+.invA-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.invA-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.invA-msg {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #111827;
+}
+
+.invA-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 12px;
+}
+
+.invA-panel {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.invA-panelTitle {
+  font-size: 13px;
+  font-weight: 900;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.invA-form {
+  display: grid;
+  gap: 10px;
+}
+
+.invA-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.invA-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+}
+
+.invA-input:focus {
+  border-color: #cbd5e1;
+}
+
+.invA-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.invA-btn {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.invA-btn:hover {
+  background: #f9fafb;
+}
+
+.invA-btnPrimary {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
+.invA-btnPrimary:hover {
+  background: #0b1220;
+}
+
+.invA-btnSecondary {
+  background: #fff;
+  color: #111827;
+}
+
+.invA-btnDanger {
+  background: #fff;
+  border-color: #f3c9c9;
+  color: #7f1d1d;
+}
+
+.invA-btnDanger:hover {
+  background: #fff5f5;
+}
+
+.invA-searchRow {
+  display: grid;
+  grid-template-columns: 1fr 200px auto;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.invA-list {
+  margin-top: 6px;
+}
+
+.invA-empty {
+  font-size: 13px;
+  color: #6b7280;
+  padding: 10px 0;
+}
+
+.invA-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.invA-table thead th {
+  text-align: left;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 900;
+  border-bottom: 1px solid #eef2f7;
+  padding: 10px 8px;
+}
+
+.invA-table tbody td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 13px;
+  color: #111827;
+}
+
+.invA-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.invA-table .right {
+  text-align: right;
+}
+
+.invA-table .muted {
+  color: #6b7280;
+}
+
+.invA-pill {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  font-weight: 900;
+  color: #111827;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .invA-grid {
+    grid-template-columns: 1fr;
+  }
+  .invA-searchRow {
+    grid-template-columns: 1fr;
+  }
+}

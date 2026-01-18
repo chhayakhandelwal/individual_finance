@@ -1,0 +1,42 @@
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 20px;
+}
+
+.profile-container h2 {
+  color: #00aaff;
+}
+
+.profile-card {
+  background: #f0f8ff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.profile-card p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.profile-actions button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #00aaff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s all;
+}
+
+.profile-actions button:hover {
+  background: #0088cc;
+}

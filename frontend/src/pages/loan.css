@@ -1,0 +1,117 @@
+/* overlay */
+.sv__overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  z-index: 9999;
+}
+
+/* modal box */
+.ln__modal{
+  width: min(720px, 94vw);
+  height: min(88vh, 720px);        /* ✅ guarantees visible modal */
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;                /* ✅ keeps inside scroll */
+  display: flex;
+  flex-direction: column;
+}
+
+/* header */
+.sv__modalHeader{
+  padding: 22px 26px;
+  border-bottom: 1px solid #e9eef6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sv__modalHeader h3{
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1f4ea3;
+}
+
+.sv__close{
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #e6edf7;
+  background: #fff;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+/* form scroll */
+.ln__form{
+  padding: 18px 26px 16px;
+  overflow-y: auto;     /* ✅ scroll inside form */
+  flex: 1;              /* ✅ take remaining height */
+}
+
+/* fields */
+.ln__form label{
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #25324a;
+  margin: 14px 0 8px;
+}
+
+.ln__form input,
+.ln__form select{
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #e6edf7;
+  padding: 0 14px;
+}
+
+/* rows */
+.sv__row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* native file input like screenshot */
+.ln__nativeFile{
+  width: 100%;
+  height: auto;
+  padding: 10px 0;
+}
+
+/* sticky actions at bottom */
+.ln__actionsSticky{
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 14px 0 6px;
+  border-top: 1px solid #eef2f7;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* buttons (if not already) */
+.sv__btn{
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 700;
+}
+.sv__btn--ghost{
+  background: #fff;
+  border-color: #d9e4f5;
+}
+.sv__btn--primary{
+  background: #0d47a1;
+  color: #fff;
+}

@@ -1,0 +1,301 @@
+/* ===============================
+   GLOBAL INVESTMENT THEME
+   =============================== */
+
+.inv-wrap {
+  padding: 20px;
+  background: #f9fafb;
+  min-height: 100vh;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #111827;
+}
+
+/* ===============================
+   HEADER
+   =============================== */
+
+.inv-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.inv-title h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.inv-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.inv-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ===============================
+   BUTTONS (UNIFIED COLOR)
+   =============================== */
+
+.inv-btn,
+button {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.inv-btn:hover,
+button:hover {
+  background: #1e40af;
+}
+
+.inv-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ===============================
+   ALERT / ERROR
+   =============================== */
+
+.inv-alert {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+/* ===============================
+   EMPTY / LOADING
+   =============================== */
+
+.inv-empty {
+  padding: 20px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ===============================
+   TABS
+   =============================== */
+
+.inv-tabs {
+  display: flex;
+  gap: 14px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 18px;
+}
+
+.inv-tab {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+
+.inv-tab:hover {
+  color: #2563eb;
+}
+
+.inv-tab.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+/* ===============================
+   SUMMARY CARDS
+   =============================== */
+
+.inv-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.inv-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.inv-card .k {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.inv-card .v {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+}
+
+/* ===============================
+   CHART PANELS
+   =============================== */
+
+.inv-grid-charts {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.inv-panel {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.inv-panel h3 {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.panel-body {
+  height: 300px;
+}
+
+/* ===============================
+   TABLES
+   =============================== */
+
+.inv-table-wrap {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 18px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.inv-table-wrap h3 {
+  margin: 0 0 10px 0;
+}
+
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.inv-table thead {
+  background: #f3f4f6;
+}
+
+.inv-table th,
+.inv-table td {
+  padding: 10px 12px;
+}
+
+.inv-table th {
+  text-align: left;
+  font-weight: 700;
+  color: #374151;
+}
+
+.inv-table tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.inv-table tr:last-child {
+  border-bottom: none;
+}
+
+.inv-right {
+  text-align: right;
+}
+
+/* ===============================
+   TYPE PILL
+   =============================== */
+
+.inv-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #e0e7ff;
+  color: #1e40af;
+}
+
+.inv-pill.muted {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* ===============================
+   SECTIONS (ASSETS / TRANSACTIONS)
+   =============================== */
+
+.inv-sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+/* ===============================
+   FORMS
+   =============================== */
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* ===============================
+   RESPONSIVE
+   =============================== */
+
+@media (max-width: 1100px) {
+  .inv-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .inv-grid-charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .inv-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .inv-tabs {
+    flex-wrap: wrap;
+  }
+}

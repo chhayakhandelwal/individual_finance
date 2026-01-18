@@ -27,3 +27,13 @@ __pycache__/
 node_modules/
 venv/
 .env
+
+# Frontend
+frontend/node_modules/
+frontend/.env
+frontend/dist/
+frontend/build/
+
+# Frontend
+frontend/node_modules/
+frontend/.env

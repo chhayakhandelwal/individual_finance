@@ -1,0 +1,147 @@
+/* Recommendation card stays inside the content column */
+.invR-wrap {
+  width: 100%;
+  box-sizing: border-box;
+
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+
+  overflow: hidden; /* prevents charts from overflowing */
+}
+
+.invR-wrap h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.invR-form {
+  display: grid;
+  grid-template-columns: 160px 120px 1fr 160px auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.invR-form select,
+.invR-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+}
+
+.invR-form button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.invR-msg {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #f9fafb;
+  color: #111827;
+}
+
+.invR-result {
+  margin-top: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.invR-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.invR-pill {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 12px;
+}
+
+.muted {
+  color: #6b7280;
+}
+
+.invR-alloc {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.invR-allocCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px;
+  background: #fff;
+}
+
+.invR-allocCard .k {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.invR-allocCard .v {
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.invR-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #111827;
+}
+
+/* --- Make charts stay inside container --- */
+.invR-chartBox {
+  margin-top: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.invR-chartBox h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.invR-chartCanvas {
+  height: 260px;
+  width: 100%;
+  position: relative;
+}
+
+/* Responsive: stack inputs on small widths */
+@media (max-width: 920px) {
+  .invR-form {
+    grid-template-columns: 1fr 1fr;
+  }
+  .invR-alloc {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,164 @@
+/* ===============================
+   Forgot Page Only Styles
+   =============================== */
+
+.forgot-page {
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  background-color: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Header (Blue Bar) */
+
+.forgot-page .header {
+  width: 100%;
+  padding: 16px 0;
+  background: #004080;
+  color: white;
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  display: flex;
+  flex-direction: column;     /* ⬅ logo upar, text niche */
+  align-items: center;        /* ⬅ horizontally center */
+  justify-content: center;
+  text-align: center;
+  z-index: 1000;
+}
+
+.forgot-page .header img {
+  width: 85px;
+  height: auto;
+  margin-bottom: 6px;
+}
+
+.forgot-page .header h1 {
+  font-size: 26px;
+  font-weight: bold;
+  margin: 0;
+  color: #ffffff;
+}
+/* Form Box */
+.forgot-page .form-area {
+  background: white;
+  width: 95%;
+  max-width: 400px;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin-top: 170px;
+  text-align: center;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.forgot-page .form-area h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+/* Input Fields */
+.forgot-page input[type="password"],
+.forgot-page input[type="text"] {
+  width: 100%;
+  padding: 15px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* Password Wrapper */
+.forgot-page .password-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.forgot-page .password-wrapper input {
+  width: 100%;
+}
+
+/* Eye Icon */
+.forgot-page .eye-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #888;
+  font-size: 18px;
+}
+
+.forgot-page .eye-icon:hover {
+  color: #000;
+}
+
+/* Error Message */
+.forgot-page .error {
+  color: red;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Remember Me Checkbox */
+.forgot-page .remember {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.forgot-page .remember input {
+  width: auto;
+}
+
+/* Buttons */
+.forgot-page button {
+  width: 100%;
+  padding: 15px;
+  background: #004080;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  box-sizing: border-box;
+  margin: 10px 0;
+}
+
+.forgot-page button:hover {
+  background: #003060;
+}
+
+/* Responsive Design */
+@media (max-width: 400px) {
+  .forgot-page {
+    padding: 10px;
+  }
+
+  .forgot-page .form-area {
+    padding: 20px;
+  }
+
+  .forgot-page input[type="password"],
+  .forgot-page input[type="text"] {
+    font-size: 14px;
+  }
+
+  .forgot-page button {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
