@@ -1,7 +1,7 @@
 from django.urls import path
 
 # AUTH
-from .auth_views import login_view, register_view
+from .auth_views import login_view, register_view, profile_view 
 
 # MODULE VIEWS
 from .income_views import income_list_create, income_update_delete
@@ -13,10 +13,15 @@ from .expenses_views import ExpenseListCreateView, ExpenseUpdateDeleteView, expe
 
 urlpatterns = [
     # =====================
-    # AUTH (correct)
+    # AUTH
     # =====================
-    path("register/", register_view, name="api-register"),
-    path("login/", login_view, name="api-login"),
+    path("register/", register_view),
+    path("login/", login_view),
+
+    # =====================
+    # PROFILE ✅
+    # =====================
+    path("profile/", profile_view),
 
     # =====================
     # MODULES
@@ -36,8 +41,7 @@ urlpatterns = [
     path("insurance/", insurance_list_create),
     path("insurance/<int:pk>/", insurance_detail),
 
-    
-    path("expenses/", ExpenseListCreateView.as_view(), name="expense-list-create"),
-    path("expenses/<int:pk>/", ExpenseUpdateDeleteView.as_view(), name="expense-detail"),
-    path("expenses/ocr/", expense_ocr, name="expense-ocr"),
+    path("expenses/", ExpenseListCreateView.as_view()),
+    path("expenses/<int:pk>/", ExpenseUpdateDeleteView.as_view()),
+    path("expenses/ocr/", expense_ocr),
 ]

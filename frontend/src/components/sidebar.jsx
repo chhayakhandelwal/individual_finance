@@ -5,7 +5,7 @@ import {
   PiggyBank,
   TrendingUp,
   Shield,        // Emergency
-  ShieldCheck,   // Insurance (NEW)
+  ShieldCheck,   // Insurance
   CreditCard,
   HandCoins,
   User,
@@ -24,10 +24,9 @@ export default function Sidebar({ username, activePage, setActivePage }) {
     { label: "Savings", icon: <PiggyBank size={18} /> },
     { label: "Investment", icon: <TrendingUp size={18} /> },
     { label: "Emergency", icon: <Shield size={18} /> },
-    { label: "Insurance", icon: <ShieldCheck size={18} /> }, // ✅ ADDED
+    { label: "Insurance", icon: <ShieldCheck size={18} /> },
     { label: "Lending", icon: <HandCoins size={18} /> },
     { label: "Profile", icon: <User size={18} /> },
-    { label: "Logout", icon: <LogOut size={18} /> },
   ];
 
   /* =====================
@@ -40,6 +39,8 @@ export default function Sidebar({ username, activePage, setActivePage }) {
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join("");
+
+  const isLogoutActive = activePage === "Logout";
 
   return (
     <aside className="sidebar" aria-label="Primary navigation">
@@ -70,28 +71,46 @@ export default function Sidebar({ username, activePage, setActivePage }) {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="menu" aria-label="Sidebar menu">
-        {menuItems.map((item) => {
-          const isActive = activePage === item.label;
+      {/* Scrollable Menu Area */}
+      <div className="sidebar-menu">
+        <nav className="menu" aria-label="Sidebar menu">
+          {menuItems.map((item) => {
+            const isActive = activePage === item.label;
 
-          return (
-            <button
-              key={item.label}
-              type="button"
-              className={`menu-item ${isActive ? "active" : ""}`}
-              onClick={() => setActivePage(item.label)}
-              aria-current={isActive ? "page" : undefined}
-            >
-              <span className="menu-icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span className="menu-label">{item.label}</span>
-              <span className="menu-pill" aria-hidden="true" />
-            </button>
-          );
-        })}
-      </nav>
+            return (
+              <button
+                key={item.label}
+                type="button"
+                className={`menu-item ${isActive ? "active" : ""}`}
+                onClick={() => setActivePage(item.label)}
+                aria-current={isActive ? "page" : undefined}
+              >
+                <span className="menu-icon" aria-hidden="true">
+                  {item.icon}
+                </span>
+                <span className="menu-label">{item.label}</span>
+                <span className="menu-pill" aria-hidden="true" />
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Logout pinned at bottom */}
+      <div className="sidebar-logout">
+        <button
+          type="button"
+          className={`menu-item logout ${isLogoutActive ? "active" : ""}`}
+          onClick={() => setActivePage("Logout")}
+          aria-current={isLogoutActive ? "page" : undefined}
+        >
+          <span className="menu-icon" aria-hidden="true">
+            <LogOut size={18} />
+          </span>
+          <span className="menu-label">Logout</span>
+          <span className="menu-pill" aria-hidden="true" />
+        </button>
+      </div>
 
       {/* Footer */}
       <div className="sidebar-footer">

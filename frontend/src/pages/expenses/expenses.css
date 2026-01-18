@@ -1,6 +1,7 @@
 /* Wrapper */
 .exp-wrap {
   width: 100%;
+   min-height: 100%;
 }
 
 /* Top bar (like InvestmentHome) */

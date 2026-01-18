@@ -1,4 +1,5 @@
 /* ====== Theme Tokens ====== */
+body { overflow: hidden; }
 :root {
   --sb-bg: #0b1220;
   --sb-bg-2: #0f1a2f;
@@ -27,6 +28,8 @@
   color: var(--sb-text);
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   overflow: hidden;
+   display: flex;              /* ✅ ADD */
+  flex-direction: column;  
 }
 
 .sidebar-bg {
@@ -45,7 +48,18 @@
   position: relative;
   z-index: 1;
 }
+.sidebar-menu {
+  flex: 1;                /* takes remaining height */
+  overflow-y: auto;       /* menu scrolls if too many items */
+  overflow-x: hidden;
+}
 
+.sidebar-logout {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  background: transparent;
+}
 /* ====== Brand ====== */
 .sidebar-brand {
   display: flex;

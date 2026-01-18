@@ -5,7 +5,37 @@ from .models import Income, SavingsGoal, Loan, EmergencyFund, InsurancePolicy, E
 
 User = get_user_model()
 
+# =====================================================
+# ✅ Profile Serializer (GET + PATCH)
+# =====================================================
+class ProfileSerializer(serializers.ModelSerializer):
+    # Frontend-friendly read-only joined string
+    joined = serializers.SerializerMethodField(read_only=True)
 
+    class Meta:
+        model = User
+        fields = [
+            "user_id",     # read-only in UI (identifier)
+            "username",    # editable
+            "email",       # editable if you use it
+            "joined",      # read-only
+        ]
+        read_only_fields = ["user_id", "joined"]
+
+        extra_kwargs = {
+            "username": {"required": False, "allow_blank": True},
+            "email": {"required": False, "allow_blank": True, "allow_null": True},
+        }
+
+    def get_joined(self, obj):
+        dj = getattr(obj, "date_joined", None)
+        return dj.strftime("%B %Y") if dj else ""
+
+    def validate_username(self, value):
+        value = (value or "").strip()
+        if value == "":
+            raise serializers.ValidationError("Username cannot be empty.")
+        return value
 # =====================================================
 # ✅ AUTH (Register / Login)
 # =====================================================
