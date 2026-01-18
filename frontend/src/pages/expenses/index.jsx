@@ -50,15 +50,23 @@ const normalizeDate = (v) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-/* ---------- BACKEND <-> UI (MODEL FIELD NAMES) ---------- */
+/* ---------- BACKEND <-> UI (UPDATED FIELD NAMES) ---------- */
+/**
+ * Backend contract (based on your OCR response + validation errors):
+ * - expects: categoryKey, date, amount, merchant, note, paymentMode (optional), source, direction
+ * - may return: categoryKey/date/note/paymentMode etc.
+ *
+ * We map backend -> UI to keep your UI state keys unchanged:
+ * UI uses: category, expense_date, description, payment_mode
+ */
 const mapFromBackend = (row) => ({
   id: row.id,
-  category: row.category || "Other",
-  expense_date: normalizeDate(row.expense_date),
-  description: row.description || "",
+  category: row.categoryKey || row.category || "Other",
+  expense_date: normalizeDate(row.date || row.expense_date),
+  description: row.note || row.description || "",
   merchant: row.merchant || "",
   amount: row.amount ?? "",
-  payment_mode: row.payment_mode || "UPI",
+  payment_mode: row.paymentMode || row.payment_mode || "UPI",
   source: row.source || "MANUAL",
   direction: row.direction || "DEBIT",
   sub_category: row.sub_category || "",
@@ -66,13 +74,17 @@ const mapFromBackend = (row) => ({
   raw_text: row.raw_text || "",
 });
 
+/**
+ * UI -> backend payload (this is the FIX)
+ * Sends categoryKey + date instead of category + expense_date
+ */
 const toBackendPayload = (draft) => ({
-  category: String(draft.category || "Other").trim(),
+  categoryKey: String(draft.category || "Other").trim(),
+  date: normalizeDate(draft.expense_date), // ✅ REQUIRED by backend (your error says date required)
   amount: Number(draft.amount),
-  expense_date: normalizeDate(draft.expense_date), // ✅ REQUIRED by backend
-  description: String(draft.description || "").trim() || "",
+  note: String(draft.description || "").trim() || "",
   merchant: String(draft.merchant || "").trim() || null,
-  payment_mode: String(draft.payment_mode || "").trim() || null,
+  paymentMode: String(draft.payment_mode || "").trim() || null,
   source: String(draft.source || "MANUAL").toUpperCase(),
   direction: "DEBIT",
 });
@@ -235,6 +247,9 @@ export default function Expenses() {
         source: "MANUAL",
       });
 
+      // helpful debugging if needed:
+      // console.log("ADD payload =>", payload);
+
       await api.post(ENDPOINTS.EXPENSES, payload);
 
       setNewExpense({
@@ -365,9 +380,8 @@ export default function Expenses() {
 
       const res = await api.post(ENDPOINTS.OCR, fd);
 
-      // Your current backend OCR returns a single object like:
+      // backend OCR returns object:
       // { amount, categoryKey, date, merchant, note }
-      // We normalize it into our UI format.
       const obj = res.data || {};
       const mapped = {
         id: null,
