@@ -1,7 +1,81 @@
 from rest_framework import serializers
-from .models import Income, SavingsGoal, Loan, EmergencyFund, InsurancePolicy
+from django.contrib.auth import get_user_model, authenticate
+
+from .models import Income, SavingsGoal, Loan, EmergencyFund, InsurancePolicy, Expense
+
+User = get_user_model()
 
 
+# =====================================================
+# ✅ AUTH (Register / Login)
+# =====================================================
+class RegisterSerializer(serializers.ModelSerializer):
+    """
+    Expected payload from frontend:
+    {
+      "username": "Chhavi",
+      "user_id": "BV123",
+      "password": "password123"
+    }
+    """
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    class Meta:
+        model = User
+        fields = ["username", "user_id", "password"]
+
+    def validate_username(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("Username is required.")
+        return value
+
+    def validate_user_id(self, value):
+        value = (value or "").strip()
+        if not value:
+            raise serializers.ValidationError("User ID is required.")
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop("password")
+        # Uses AppUserManager.create_user() -> set_password()
+        user = User.objects.create_user(password=password, **validated_data)
+        return user
+
+
+class LoginSerializer(serializers.Serializer):
+    """
+    Expected payload from frontend:
+    {
+      "user_id": "BV123",
+      "password": "password123"
+    }
+    """
+    user_id = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user_id = (attrs.get("user_id") or "").strip()
+        password = attrs.get("password") or ""
+
+        if not user_id or not password:
+            raise serializers.ValidationError("User ID and password are required.")
+
+        # Because USERNAME_FIELD = "user_id"
+        user = authenticate(username=user_id, password=password)
+        if not user:
+            raise serializers.ValidationError("Invalid credentials or user not registered.")
+
+        if not getattr(user, "is_active", True):
+            raise serializers.ValidationError("User is inactive.")
+
+        attrs["user"] = user
+        return attrs
+
+
+# =====================================================
+# Income
+# =====================================================
 class IncomeSerializer(serializers.ModelSerializer):
     # Frontend sends "date" -> map to model field "income_date"
     date = serializers.DateField(source="income_date", required=True)
@@ -38,6 +112,9 @@ class IncomeSerializer(serializers.ModelSerializer):
         return value
 
 
+# =====================================================
+# Savings Goal
+# =====================================================
 class SavingsGoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = SavingsGoal
@@ -66,12 +143,15 @@ class SavingsGoalSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"saved_amount": "Saved amount cannot exceed target amount."})
 
         name = attrs.get("name")
-        if name is not None and not name.strip():
+        if name is not None and not str(name).strip():
             raise serializers.ValidationError({"name": "Name cannot be empty."})
 
         return attrs
 
 
+# =====================================================
+# Emergency Fund
+# =====================================================
 class EmergencyFundSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmergencyFund
@@ -106,6 +186,9 @@ class EmergencyFundSerializer(serializers.ModelSerializer):
         return attrs
 
 
+# =====================================================
+# Loan
+# =====================================================
 class LoanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Loan
@@ -150,9 +233,7 @@ class LoanSerializer(serializers.ModelSerializer):
 
 
 # =====================================================
-# ✅ Insurance Policy Serializer (UPDATED)
-# API fields = camelCase (frontend)
-# Model fields = snake_case (db)
+# ✅ Insurance Policy Serializer (camelCase frontend)
 # =====================================================
 class InsurancePolicySerializer(serializers.ModelSerializer):
     # Frontend -> Model mapping
@@ -209,5 +290,93 @@ class InsurancePolicySerializer(serializers.ModelSerializer):
         # put trimmed values back
         attrs["name"] = name
         attrs["policy_number"] = policy_number
+
+        return attrs
+
+
+# =====================================================
+# ✅ Expense Serializer (camelCase frontend mapping)
+# Frontend fields: categoryKey, date, note, merchant, amount
+# Model fields: category, expense_date, description, merchant, amount
+# =====================================================
+class ExpenseSerializer(serializers.ModelSerializer):
+    categoryKey = serializers.CharField(source="category", required=True)
+    date = serializers.DateField(source="expense_date", required=True)
+
+    # note is optional and maps to description
+    note = serializers.CharField(
+        source="description",
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        default="",
+    )
+
+    merchant = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        default="",
+    )
+
+    # OPTIONAL: read-only mirrors for debugging / convenience (like income_date)
+    category = serializers.CharField(read_only=True)
+    expense_date = serializers.DateField(read_only=True)
+
+    class Meta:
+        model = Expense
+        fields = [
+            "id",
+
+            # camelCase (frontend)
+            "categoryKey",
+            "amount",
+            "date",
+            "note",
+            "merchant",
+
+            # optional extra fields
+            "payment_mode",
+            "source",
+            "direction",
+            "txn_id",
+            "raw_text",
+
+            # read-only mirrors (safe)
+            "category",
+            "expense_date",
+
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at", "category", "expense_date"]
+
+    def validate(self, attrs):
+        errors = {}
+
+        category = (attrs.get("category") or "").strip()
+        amount = attrs.get("amount", None)
+        expense_date = attrs.get("expense_date", None)
+
+        if not category:
+            errors["categoryKey"] = "Category is required."
+
+        if amount is None or amount <= 0:
+            errors["amount"] = "Amount must be greater than zero."
+
+        if not expense_date:
+            errors["date"] = "Date is required."
+
+        # normalize optional strings
+        merchant = attrs.get("merchant", "")
+        attrs["merchant"] = (merchant or "").strip() or None
+
+        description = attrs.get("description", "")
+        attrs["description"] = (description or "").strip() or ""
+
+        attrs["category"] = category
+
+        if errors:
+            raise serializers.ValidationError(errors)
 
         return attrs
