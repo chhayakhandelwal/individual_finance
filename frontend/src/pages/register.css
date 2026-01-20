@@ -16,8 +16,10 @@
   background: var(--bg);
   padding-top: 120px; /* space for fixed header */
   padding-bottom: 40px;
-  display: flex;
-  justify-content: center;
+
+  /* ✅ Fix scrolling: let the page/body scroll naturally */
+  display: block;
+  overflow: visible;
 }
 
 /* Fixed Header like Login */
@@ -62,6 +64,9 @@
   box-shadow: var(--shadow);
   border: 1px solid rgba(229, 231, 235, 0.9);
   overflow: hidden;
+
+  /* ✅ Center the card */
+  margin: 0 auto;
 }
 
 /* Card top section */

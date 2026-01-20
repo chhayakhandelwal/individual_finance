@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from datetime import timedelta
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 
@@ -8,27 +9,33 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 # App User (Django Auth User Model) ✅
 # =====================================================
 class AppUserManager(BaseUserManager):
-    def create_user(self, user_id, username, password=None, **extra_fields):
-        if not user_id:
-            raise ValueError("user_id is required")
+    def create_user(self, username, password=None, **extra_fields):
         if not username:
             raise ValueError("username is required")
 
-        user = self.model(user_id=user_id, username=username, **extra_fields)
-        user.set_password(password)  # ✅ Django hashing
+        username = username.strip()
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, user_id, username, password=None, **extra_fields):
+    def create_superuser(self, username, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
-        return self.create_user(user_id=user_id, username=username, password=password, **extra_fields)
+        return self.create_user(username=username, password=password, **extra_fields)
 
 
 class AppUser(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=150)
-    user_id = models.CharField(max_length=50, unique=True, db_index=True)
+    username = models.CharField(
+        max_length=150,
+        unique=True,          # ✅ UNIQUE
+        db_index=True,
+    )
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(blank=True)
+             # ✅
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -36,7 +43,6 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # ✅ Fix reverse accessor clashes with auth.User
     groups = models.ManyToManyField(
         "auth.Group",
         blank=True,
@@ -52,15 +58,15 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
 
     objects = AppUserManager()
 
-    USERNAME_FIELD = "user_id"
-    REQUIRED_FIELDS = ["username"]
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = []
 
     class Meta:
         swappable = "AUTH_USER_MODEL"
 
     def __str__(self):
-        return f"{self.username} ({self.user_id})"
-# =====================================================
+        return self.username
+        # =====================================================
 # Income
 # =====================================================
 class Income(models.Model):
@@ -225,8 +231,8 @@ class InsurancePolicy(models.Model):
 # =====================================================
 class Expense(models.Model):
     DIRECTION_CHOICES = [
-        ("DEBIT", "DEBIT"),    # money out
-        ("CREDIT", "CREDIT"),  # money in (optional)
+        ("DEBIT", "DEBIT"),
+        ("CREDIT", "CREDIT"),
     ]
 
     SOURCE_CHOICES = [
@@ -242,7 +248,6 @@ class Expense(models.Model):
         db_index=True,
     )
 
-    # Main fields
     description = models.CharField(max_length=255, blank=True, null=True)
     merchant = models.CharField(max_length=140, blank=True, null=True)
 
@@ -252,13 +257,12 @@ class Expense(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     expense_date = models.DateField(db_index=True)
 
-    payment_mode = models.CharField(max_length=30, blank=True, null=True)  # UPI/Card/Cash/etc.
+    payment_mode = models.CharField(max_length=30, blank=True, null=True)
     direction = models.CharField(max_length=10, choices=DIRECTION_CHOICES, default="DEBIT")
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default="MANUAL")
 
-    # Statement/OCR helpers
-    txn_id = models.CharField(max_length=120, blank=True, null=True)  # bank ref/utr
-    raw_text = models.TextField(blank=True, default="")               # OCR text or statement line
+    txn_id = models.CharField(max_length=120, blank=True, null=True)
+    raw_text = models.TextField(blank=True, default="")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -272,3 +276,24 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.user} | {self.category} | {self.amount} | {self.expense_date}"
+
+
+# =====================================================
+# Password Reset OTP ✅
+# =====================================================
+class PasswordResetOTP(models.Model):
+    username = models.CharField(max_length=150, db_index=True)
+    email = models.EmailField(db_index=True)
+    otp_hash = models.CharField(max_length=255)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["username", "email"]),
+        ]
+
+    def __str__(self):
+        return f"{self.username} | {self.email} | {self.created_at}"

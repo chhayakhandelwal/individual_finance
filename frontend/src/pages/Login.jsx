@@ -6,8 +6,7 @@ const API_BASE_URL =
   (process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 
 export default function LoginPage({ onLogin, onOpenForgot, onOpenRegister }) {
-  const [username, setUsername] = useState("");   // ✅ INCLUDED
-  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,11 +31,11 @@ export default function LoginPage({ onLogin, onOpenForgot, onOpenRegister }) {
     e.preventDefault();
     if (isSubmitting) return;
 
-    const uid = userId.trim();
+    const uname = username.trim();
     const pwd = password;
 
-    if (!uid || !pwd) {
-      alert("ID and Password are required!");
+    if (!uname || !pwd) {
+      alert("Username and Password are required!");
       return;
     }
 
@@ -53,8 +52,7 @@ export default function LoginPage({ onLogin, onOpenForgot, onOpenRegister }) {
       const res = await axios.post(
         `${API_BASE_URL}/api/login/`,
         {
-          username: username.trim(),   // ✅ INCLUDED (optional)
-          user_id: uid,                // ✅ PRIMARY AUTH FIELD
+          username: uname,
           password: pwd,
         },
         {
@@ -67,9 +65,9 @@ export default function LoginPage({ onLogin, onOpenForgot, onOpenRegister }) {
       if (!token) throw new Error("Token not received");
 
       localStorage.setItem("token", token);
-      localStorage.setItem("username", res.data.user.name);
+      localStorage.setItem("username", res.data.user?.name || uname);
 
-      onLogin(res.data.user.name);
+      onLogin(res.data.user?.name || uname);
       window.dispatchEvent(new Event("auth-token-changed"));
 
       alert("Login successful");
@@ -78,7 +76,7 @@ export default function LoginPage({ onLogin, onOpenForgot, onOpenRegister }) {
       alert(
         err?.response?.data?.message ||
         err?.response?.data?.detail ||
-        "Invalid ID or password"
+        "Invalid username or password"
       );
       generateCaptcha();
       setCaptchaInput("");
@@ -101,29 +99,23 @@ export default function LoginPage({ onLogin, onOpenForgot, onOpenRegister }) {
         <h2>Login</h2>
 
         <form onSubmit={handleSubmit}>
-          {/* ✅ USERNAME */}
+          {/* USERNAME */}
           <label>Username</label>
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Enter Username"
+            required
           />
 
-          {/* ✅ USER ID */}
-          <label>ID</label>
-          <input
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="Enter ID"
-          />
-
-          {/* ✅ PASSWORD */}
+          {/* PASSWORD */}
           <label>Password</label>
           <div className="password-container">
             <input
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
             <span onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? "🙈" : "👁️"}
@@ -141,6 +133,7 @@ export default function LoginPage({ onLogin, onOpenForgot, onOpenRegister }) {
             placeholder="Enter Captcha"
             value={captchaInput}
             onChange={(e) => setCaptchaInput(e.target.value)}
+            required
           />
 
           <button type="submit" disabled={isSubmitting}>
