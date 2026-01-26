@@ -38,6 +38,9 @@ const ENDPOINTS = {
   OCR: "/api/expenses/ocr/",
 };
 
+/* ---------- LOCAL STORAGE KEYS ---------- */
+const LS_BUDGET_LIMITS = "finpro_budget_limits_v1"; // { Shopping: 6000, Food: 5000, ... }
+
 const normalizeDate = (v) => {
   if (!v) return "";
   const s = String(v).slice(0, 10);
@@ -50,15 +53,15 @@ const normalizeDate = (v) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
+const monthKeyFromDate = (dateStr) => {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${yyyy}-${mm}`; // e.g., "2026-01"
+};
+
 /* ---------- BACKEND <-> UI (UPDATED FIELD NAMES) ---------- */
-/**
- * Backend contract (based on your OCR response + validation errors):
- * - expects: categoryKey, date, amount, merchant, note, paymentMode (optional), source, direction
- * - may return: categoryKey/date/note/paymentMode etc.
- *
- * We map backend -> UI to keep your UI state keys unchanged:
- * UI uses: category, expense_date, description, payment_mode
- */
 const mapFromBackend = (row) => ({
   id: row.id,
   category: row.categoryKey || row.category || "Other",
@@ -74,13 +77,9 @@ const mapFromBackend = (row) => ({
   raw_text: row.raw_text || "",
 });
 
-/**
- * UI -> backend payload (this is the FIX)
- * Sends categoryKey + date instead of category + expense_date
- */
 const toBackendPayload = (draft) => ({
   categoryKey: String(draft.category || "Other").trim(),
-  date: normalizeDate(draft.expense_date), // ✅ REQUIRED by backend (your error says date required)
+  date: normalizeDate(draft.expense_date),
   amount: Number(draft.amount),
   note: String(draft.description || "").trim() || "",
   merchant: String(draft.merchant || "").trim() || null,
@@ -115,7 +114,28 @@ export default function Expenses() {
 
   /* ---------- STATE ---------- */
   const [activeTab, setActiveTab] = useState("overview"); // overview | expenses | ocr
-  const [categories, setCategories] = useState(CATEGORY_MASTER);
+
+  // Selected month for budgets/overview
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    return `${yyyy}-${mm}`;
+  });
+
+  // Categories with limits (hydrated from localStorage)
+  const [categories, setCategories] = useState(() => {
+    let saved = {};
+    try {
+      saved = JSON.parse(localStorage.getItem(LS_BUDGET_LIMITS) || "{}") || {};
+    } catch {
+      saved = {};
+    }
+    return CATEGORY_MASTER.map((c) => ({
+      ...c,
+      monthlyLimit: Number.isFinite(Number(saved[c.key])) ? Number(saved[c.key]) : c.monthlyLimit,
+    }));
+  });
 
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -199,17 +219,22 @@ export default function Expenses() {
     fetchExpenses();
   }, [fetchExpenses]);
 
-  /* ---------- OVERVIEW METRICS ---------- */
+  /* ---------- FILTER EXPENSES BY SELECTED MONTH (dynamic budgets) ---------- */
+  const monthExpenses = useMemo(() => {
+    return expenses.filter((e) => monthKeyFromDate(e.expense_date) === selectedMonth);
+  }, [expenses, selectedMonth]);
+
+  /* ---------- OVERVIEW METRICS (MONTH-AWARE) ---------- */
   const totalsByCategory = useMemo(() => {
     const map = {};
     for (const c of categories) map[c.key] = 0;
 
-    for (const e of expenses) {
+    for (const e of monthExpenses) {
       const key = e.category || "Other";
       map[key] = (map[key] || 0) + Number(e.amount || 0);
     }
     return map;
-  }, [expenses, categories]);
+  }, [monthExpenses, categories]);
 
   const overall = useMemo(() => {
     const totalSpent = Object.values(totalsByCategory).reduce((a, b) => a + (Number(b) || 0), 0);
@@ -246,9 +271,6 @@ export default function Expenses() {
         expense_date: newExpense.expense_date,
         source: "MANUAL",
       });
-
-      // helpful debugging if needed:
-      // console.log("ADD payload =>", payload);
 
       await api.post(ENDPOINTS.EXPENSES, payload);
 
@@ -343,10 +365,20 @@ export default function Expenses() {
     }
   };
 
-  /* ---------- LIMITS (frontend-only) ---------- */
+  /* ---------- LIMITS (persist to localStorage) ---------- */
   const startLimitEdit = (cat) => {
     setLimitEditKey(cat.key);
     setLimitValue(String(cat.monthlyLimit ?? ""));
+  };
+
+  const persistLimits = (nextCategories) => {
+    const obj = {};
+    for (const c of nextCategories) obj[c.key] = Number(c.monthlyLimit) || 0;
+    try {
+      localStorage.setItem(LS_BUDGET_LIMITS, JSON.stringify(obj));
+    } catch {
+      // ignore
+    }
   };
 
   const saveLimitEdit = (key) => {
@@ -355,8 +387,24 @@ export default function Expenses() {
       setErrorMsg("Enter a valid limit.");
       return;
     }
-    setCategories((prev) => prev.map((c) => (c.key === key ? { ...c, monthlyLimit: val } : c)));
+
+    setCategories((prev) => {
+      const next = prev.map((c) => (c.key === key ? { ...c, monthlyLimit: val } : c));
+      persistLimits(next);
+      return next;
+    });
+
     setLimitEditKey(null);
+  };
+
+  const resetAllLimits = () => {
+    setCategories(() => {
+      const next = CATEGORY_MASTER.map((c) => ({ ...c }));
+      persistLimits(next);
+      return next;
+    });
+    setLimitEditKey(null);
+    setLimitValue("");
   };
 
   /* ---------- OCR: PREVIEW ---------- */
@@ -380,8 +428,6 @@ export default function Expenses() {
 
       const res = await api.post(ENDPOINTS.OCR, fd);
 
-      // backend OCR returns object:
-      // { amount, categoryKey, date, merchant, note }
       const obj = res.data || {};
       const mapped = {
         id: null,
@@ -521,6 +567,25 @@ export default function Expenses() {
       {/* OVERVIEW */}
       {activeTab === "overview" && (
         <>
+          <div className="exp-panel" style={{ marginBottom: 16 }}>
+            <div className="exp-panel-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div>
+                <h3>Overview</h3>
+                <div className="exp-panel-sub">All budget calculations below are for the selected month.</div>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <label style={{ fontSize: 12, opacity: 0.8 }}>Month</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e5e7eb" }}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="exp-grid-4">
             <SummaryCard title="Total Spent" value={inr(overall.totalSpent)} />
             <SummaryCard title="Total Limit" value={inr(overall.totalLimit)} />
@@ -553,9 +618,17 @@ export default function Expenses() {
           </div>
 
           <div className="exp-panel">
-            <div className="exp-panel-head">
-              <h3>Category Budgets</h3>
-              <div className="exp-panel-sub">Edit monthly limits (frontend-only for now).</div>
+            <div className="exp-panel-head" style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+              <div>
+                <h3>Category Budgets</h3>
+                <div className="exp-panel-sub">
+                  Limits are saved in your browser (localStorage). Spent is calculated for <b>{selectedMonth}</b>.
+                </div>
+              </div>
+
+              <button className="exp-btn" onClick={resetAllLimits} type="button">
+                Reset Limits
+              </button>
             </div>
 
             <div className="exp-cat-grid">
@@ -583,7 +656,13 @@ export default function Expenses() {
                       <div className="exp-cat-actions">
                         {limitEditKey === c.key ? (
                           <>
-                            <input className="exp-mini-input" type="number" value={limitValue} onChange={(e) => setLimitValue(e.target.value)} placeholder="Limit" />
+                            <input
+                              className="exp-mini-input"
+                              type="number"
+                              value={limitValue}
+                              onChange={(e) => setLimitValue(e.target.value)}
+                              placeholder="Limit"
+                            />
                             <button className="exp-mini-btn" onClick={() => saveLimitEdit(c.key)} type="button">
                               Save
                             </button>

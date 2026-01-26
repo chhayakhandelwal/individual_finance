@@ -17,7 +17,7 @@ const readToken = () => {
   for (const k of TOKEN_KEYS) {
     const v = sessionStorage.getItem(k);
     if (v) return v;
-  }
+  } 
   return null;
 };
 

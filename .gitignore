@@ -37,3 +37,12 @@ frontend/build/
 # Frontend
 frontend/node_modules/
 frontend/.env
+
+# Celery beat local schedule DB
+celerybeat-schedule
+celerybeat-schedule-shm
+celerybeat-schedule-wal
+mysite/celerybeat-schedule
+mysite/celerybeat-schedule-shm
+mysite/celerybeat-schedule-wal
+

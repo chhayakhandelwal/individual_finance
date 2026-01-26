@@ -126,6 +126,34 @@ class SavingsGoal(models.Model):
         return f"{self.user} | {self.name}"
 
 
+# ✅ ADD THESE 2 MODELS BELOW YOUR SavingsGoal
+
+class SavingsContribution(models.Model):
+    goal = models.ForeignKey(SavingsGoal, on_delete=models.CASCADE, related_name="contributions")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="savings_contributions")
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    contribution_date = models.DateField(default=timezone.localdate)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class NotificationEvent(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notification_events")
+    goal = models.ForeignKey(SavingsGoal, null=True, blank=True, on_delete=models.CASCADE, related_name="notification_events")
+
+    event_key = models.CharField(max_length=80)  # e.g. DEADLINE_D15, NO_CONTRIB_2026_01
+    event_date = models.DateField(default=timezone.localdate)
+
+    channel = models.CharField(max_length=10, default="email")   # email
+    status = models.CharField(max_length=10, default="sent")     # sent/failed
+    meta = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "goal", "event_key"]),
+            models.Index(fields=["event_date"]),
+        ]
+
 # =====================================================
 # Emergency Fund
 # =====================================================

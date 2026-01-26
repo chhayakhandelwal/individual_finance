@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
 from corsheaders.defaults import default_headers
+from celery.schedules import crontab
 
 # ----------------------------
 # Base
@@ -45,8 +46,7 @@ MIDDLEWARE = [
 ]
 ROOT_URLCONF = "mysite.urls"
 # Email (DEV) — prints emails in terminal
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "no-reply@localhost"
+
 
 # ----------------------------
 # Templates
@@ -173,4 +173,37 @@ USE_TZ = True
 # Static
 # ----------------------------
 STATIC_URL = "static/"
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
+
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = "rishikaa11aa@gmail.com"
+
+import os
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+
+DEFAULT_FROM_EMAIL = f"Django Finance <rishikaa11aa@gmail.com>"
+
+
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_TIMEZONE = "Asia/Kolkata"
+
+CELERY_BEAT_SCHEDULE = {
+    # Every day 9 AM: deadline reminders (30/15/5 days before)
+    "daily-deadline-reminders": {
+        "task": "core.tasks.daily_deadline_reminders",
+        "schedule": crontab(hour=9, minute=0),
+    },
+    # New (28–31 daily at 9 PM, task month-end check karega)
+    "monthly-no-contribution-month-end": {
+    "task": "core.tasks.month_end_no_contribution_alert",
+    "schedule": crontab(day_of_month="28-31", hour=21, minute=0),  # 9:00 PM
+    },
+}
