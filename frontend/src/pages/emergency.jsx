@@ -7,8 +7,19 @@ import "./emergency.css";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-/* ---------- TOKEN UTILS ---------- */
-const TOKEN_KEYS = ["token", "accessToken", "authToken", "jwt"];
+/* ---------- TOKEN UTILS (JWT) ---------- */
+/**
+ * ✅ Your backend is using SimpleJWT:
+ * REST_FRAMEWORK -> JWTAuthentication
+ * SIMPLE_JWT -> AUTH_HEADER_TYPES = ("Bearer",)
+ *
+ * So frontend must send:  Authorization: Bearer <access_token>
+ *
+ * This function tries common keys.
+ * (Keep whichever key you actually store after login: usually "access")
+ */
+const TOKEN_KEYS = ["access", "accessToken", "jwt", "token", "authToken"];
+
 const readToken = () => {
   for (const k of TOKEN_KEYS) {
     const v = localStorage.getItem(k);
@@ -17,7 +28,7 @@ const readToken = () => {
   for (const k of TOKEN_KEYS) {
     const v = sessionStorage.getItem(k);
     if (v) return v;
-  } 
+  }
   return null;
 };
 
@@ -35,6 +46,7 @@ export default function EmergencyFunds() {
     name: "",
     target_amount: "",
     saved_amount: "",
+    interval: "monthly",
     note: "",
   });
 
@@ -46,7 +58,7 @@ export default function EmergencyFunds() {
   // ✅ Django style: trailing slash
   const API_PATH = "/api/emergency/";
 
-  /* ---------- AXIOS INSTANCE (WITH AUTH) ---------- */
+  /* ---------- AXIOS INSTANCE (WITH JWT AUTH) ---------- */
   const api = useMemo(() => {
     const instance = axios.create({
       baseURL: API_BASE_URL,
@@ -56,11 +68,14 @@ export default function EmergencyFunds() {
 
     instance.interceptors.request.use((config) => {
       const token = readToken();
+
+      // If no token, don't attach Authorization; backend will return 401 and we show message.
       if (token) {
         config.headers = config.headers || {};
-        // ✅ CRITICAL FIX: Your token is custom appuser-..., so use Token (not Bearer)
-        config.headers.Authorization = `Token ${token}`;
+        // ✅ FIX: Must be Bearer for SimpleJWT
+        config.headers.Authorization = `Bearer ${token}`;
       }
+
       return config;
     });
 
@@ -78,10 +93,7 @@ export default function EmergencyFunds() {
   };
 
   const handleAuthFailure = () => {
-    setError("Unauthorized (401). Please login again. Your token is missing/expired.");
-    // optional: auto-clear token to force login screen
-    // localStorage.removeItem("token");
-    // sessionStorage.removeItem("token");
+    setError("Unauthorized (401). Please login again. Your JWT token is missing/expired.");
   };
 
   /* ---------------- FETCH ---------------- */
@@ -124,17 +136,32 @@ export default function EmergencyFunds() {
     );
 
     const remaining = Math.max(totals.target - totals.saved, 0);
-    const avgProgress =
-      totals.target > 0 ? Math.round((totals.saved / totals.target) * 100) : 0;
+    const avgProgress = totals.target > 0 ? Math.round((totals.saved / totals.target) * 100) : 0;
 
     return { ...totals, remaining, avgProgress };
   }, [funds]);
+
+  const intervalLabel = (v) => {
+    const s = String(v || "").toLowerCase();
+    if (s === "weekly") return "Weekly";
+    if (s === "monthly") return "Monthly";
+    if (s === "quarterly") return "Quarterly";
+    if (s === "halfyearly") return "Half-Yearly";
+    if (s === "yearly") return "Yearly";
+    return v || "—";
+  };
 
   /* ---------------- MODAL ---------------- */
   const openAdd = () => {
     setError("");
     setEditingId(null);
-    setFormData({ name: "", target_amount: "", saved_amount: "", note: "" });
+    setFormData({
+      name: "",
+      target_amount: "",
+      saved_amount: "",
+      interval: "monthly",
+      note: "",
+    });
     setModalOpen(true);
   };
 
@@ -145,6 +172,7 @@ export default function EmergencyFunds() {
       name: row?.name || "",
       target_amount: row?.target_amount ?? "",
       saved_amount: row?.saved_amount ?? "",
+      interval: row?.interval || "monthly",
       note: row?.note || row?.description || "",
     });
     setModalOpen(true);
@@ -159,8 +187,12 @@ export default function EmergencyFunds() {
       name: String(formData.name || "").trim(),
       target_amount: Number(formData.target_amount),
       saved_amount: Number(formData.saved_amount),
+      interval: String(formData.interval || "monthly").toLowerCase(),
       note: String(formData.note || "").trim(),
     };
+
+    // ✅ FIX: include halfyearly too (your UI offers it)
+    const allowedIntervals = ["weekly", "monthly", "quarterly", "halfyearly", "yearly"];
 
     if (!payload.name) return setError("Name is required.");
     if (!Number.isFinite(payload.target_amount) || payload.target_amount <= 0)
@@ -169,10 +201,11 @@ export default function EmergencyFunds() {
       return setError("Saved amount cannot be negative.");
     if (payload.saved_amount > payload.target_amount)
       return setError("Saved amount cannot exceed target amount.");
+    if (!allowedIntervals.includes(payload.interval))
+      return setError("Please select a valid interval.");
 
     try {
       if (editingId) {
-        // ✅ correct URL: /api/emergency/<id>/
         const res = await api.put(`${API_PATH}${editingId}/`, payload);
         setFunds((prev) => prev.map((x) => (x.id === editingId ? res.data : x)));
       } else {
@@ -182,13 +215,22 @@ export default function EmergencyFunds() {
 
       setModalOpen(false);
       setEditingId(null);
-      setFormData({ name: "", target_amount: "", saved_amount: "", note: "" });
+      setFormData({
+        name: "",
+        target_amount: "",
+        saved_amount: "",
+        interval: "monthly",
+        note: "",
+      });
     } catch (err) {
       logAxiosError("SAVE EMERGENCY ERROR", err);
       const status = err?.response?.status;
 
       if (status === 401) handleAuthFailure();
-      else if (status === 400) setError("400 Bad Request: Backend validation failed.");
+      else if (status === 400)
+        setError(
+          "400 Bad Request: Backend validation failed. Check serializer fields + payload in console."
+        );
       else if (status === 404) setError(`404 Not Found: Check backend URL for ${API_PATH}`);
       else if (status === 500) setError("500 Server Error: Check Django terminal traceback.");
       else setError("Could not save emergency fund. Check console + Django terminal.");
@@ -232,7 +274,9 @@ export default function EmergencyFunds() {
 
       <div className="ef__kpis">
         <div className="ef__kpi">
-          <div className="ef__kpiIcon"><FaShieldAlt /></div>
+          <div className="ef__kpiIcon">
+            <FaShieldAlt />
+          </div>
           <div>
             <div className="ef__kpiLabel">Total Target</div>
             <div className="ef__kpiValue">₹{formatINR(summary.target)}</div>
@@ -240,7 +284,9 @@ export default function EmergencyFunds() {
         </div>
 
         <div className="ef__kpi">
-          <div className="ef__kpiIcon"><FaWallet /></div>
+          <div className="ef__kpiIcon">
+            <FaWallet />
+          </div>
           <div>
             <div className="ef__kpiLabel">Total Saved</div>
             <div className="ef__kpiValue">₹{formatINR(summary.saved)}</div>
@@ -248,7 +294,9 @@ export default function EmergencyFunds() {
         </div>
 
         <div className="ef__kpi">
-          <div className="ef__kpiIcon"><FaChartLine /></div>
+          <div className="ef__kpiIcon">
+            <FaChartLine />
+          </div>
           <div>
             <div className="ef__kpiLabel">Remaining</div>
             <div className="ef__kpiValue">₹{formatINR(summary.remaining)}</div>
@@ -272,7 +320,13 @@ export default function EmergencyFunds() {
 
           const data = {
             labels: ["Saved", "Remaining"],
-            datasets: [{ data: [saved, remaining], backgroundColor: ["#00aaff", "#d0eaff"], borderWidth: 0 }],
+            datasets: [
+              {
+                data: [saved, remaining],
+                backgroundColor: ["#00aaff", "#d0eaff"],
+                borderWidth: 0,
+              },
+            ],
           };
 
           return (
@@ -281,11 +335,20 @@ export default function EmergencyFunds() {
                 <div className="ef__cardTitleWrap">
                   <h3 className="ef__cardTitle">{f.name}</h3>
                   <span className="ef__chip">{Math.min(progress, 100)}% funded</span>
+                  <span className="ef__chip" style={{ marginLeft: 8 }}>
+                    {intervalLabel(f.interval)}
+                  </span>
                 </div>
 
                 <div className="ef__cardBtns">
-                  <button className="ef__miniBtn" onClick={() => openEdit(f)} type="button">Edit</button>
-                  <button className="ef__miniBtn ef__miniBtn--danger" onClick={() => handleDelete(f.id)} type="button">
+                  <button className="ef__miniBtn" onClick={() => openEdit(f)} type="button">
+                    Edit
+                  </button>
+                  <button
+                    className="ef__miniBtn ef__miniBtn--danger"
+                    onClick={() => handleDelete(f.id)}
+                    type="button"
+                  >
                     Delete
                   </button>
                 </div>
@@ -319,7 +382,10 @@ export default function EmergencyFunds() {
 
                 <div className="ef__chart">
                   <div className="ef__chartRing">
-                    <Pie data={data} options={{ maintainAspectRatio: false, plugins: { legend: { display: false } } }} />
+                    <Pie
+                      data={data}
+                      options={{ maintainAspectRatio: false, plugins: { legend: { display: false } } }}
+                    />
                     <div className="ef__chartCenter">
                       <div className="ef__chartPct">{Math.min(progress, 100)}%</div>
                       <div className="ef__chartTxt">Saved</div>
@@ -343,7 +409,12 @@ export default function EmergencyFunds() {
           <div className="ef__modal" onClick={(e) => e.stopPropagation()}>
             <div className="ef__modalHeader">
               <h3>{editingId ? "Edit Fund" : "Add Fund"}</h3>
-              <button className="ef__close" onClick={() => setModalOpen(false)} aria-label="Close" type="button">
+              <button
+                className="ef__close"
+                onClick={() => setModalOpen(false)}
+                aria-label="Close"
+                type="button"
+              >
                 ×
               </button>
             </div>
@@ -382,6 +453,19 @@ export default function EmergencyFunds() {
                 </div>
               </div>
 
+              <label>Interval</label>
+              <select
+                value={formData.interval}
+                onChange={(e) => setFormData({ ...formData, interval: e.target.value })}
+                required
+              >
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="halfyearly">Half-Yearly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+
               <label>Note (optional)</label>
               <textarea
                 placeholder="e.g., For unexpected hospital bills"
@@ -390,7 +474,11 @@ export default function EmergencyFunds() {
               />
 
               <div className="ef__modalActions">
-                <button type="button" className="ef__btn ef__btn--ghost" onClick={() => setModalOpen(false)}>
+                <button
+                  type="button"
+                  className="ef__btn ef__btn--ghost"
+                  onClick={() => setModalOpen(false)}
+                >
                   Cancel
                 </button>
                 <button type="submit" className="ef__btn ef__btn--primary">

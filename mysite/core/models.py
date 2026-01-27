@@ -66,8 +66,8 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
-        # =====================================================
-# Income
+# =====================================================
+    # Income
 # =====================================================
 class Income(models.Model):
     CATEGORY_CHOICES = [
@@ -158,6 +158,14 @@ class NotificationEvent(models.Model):
 # Emergency Fund
 # =====================================================
 class EmergencyFund(models.Model):
+    
+    INTERVAL_CHOICES = [
+        ("weekly", "Weekly"),
+        ("monthly", "Monthly"),
+        ("quarterly", "Quarterly"),
+        ("halfyearly", "Half-Yearly"),
+        ("yearly", "Yearly"),
+    ]
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -169,12 +177,26 @@ class EmergencyFund(models.Model):
     saved_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     note = models.TextField(blank=True, default="")
 
+    interval = models.CharField(
+        max_length=20,
+        choices=INTERVAL_CHOICES,
+        default="monthly",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.user} | {self.name}"
 
+    
+    interval = models.CharField(max_length=20, default="monthly")  # you already added choices
+
+    last_contribution_at = models.DateTimeField(null=True, blank=True)
+    last_reminder_sent_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)  # strongly recommended
+    updated_at = models.DateTimeField(auto_now=True)      # optional but useful
 
 # =====================================================
 # Loan

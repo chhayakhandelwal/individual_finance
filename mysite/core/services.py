@@ -1,12 +1,23 @@
 # core/services.py
 
 from decimal import Decimal
-from django.core.mail import send_mail
-from django.utils import timezone
+from datetime import timedelta
+
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.db.models import Sum
+from django.utils import timezone
 
-from .models import NotificationEvent, SavingsGoal, SavingsContribution
+from .models import (
+    NotificationEvent,
+    SavingsGoal,
+    SavingsContribution,
+    EmergencyFund,
+)
 
+# =========================================================
+# SAVINGS MODULE (existing logic - unchanged)
+# =========================================================
 
 def _already_sent(user, goal, event_key) -> bool:
     return NotificationEvent.objects.filter(user=user, goal=goal, event_key=event_key).exists()
@@ -35,12 +46,6 @@ def goal_stats(goal: SavingsGoal):
 
 
 def contribution_summary(goal: SavingsGoal, days: int = 30):
-    """
-    Summary for last `days` days:
-    - count
-    - total contributed
-    - last contribution date
-    """
     today = timezone.localdate()
     start = today - timezone.timedelta(days=days)
 
@@ -58,13 +63,9 @@ def contribution_summary(goal: SavingsGoal, days: int = 30):
 
 
 def build_detailed_body(goal: SavingsGoal, headline: str, extra_lines=None) -> str:
-    """
-    Full-detail email body used for ALL notifications.
-    """
     user = goal.user
     target, saved, remaining, pct, days_left = goal_stats(goal)
 
-    # Pace (only meaningful when days_left > 0)
     if days_left is None or days_left <= 0:
         daily_required = None
         monthly_required = None
@@ -72,13 +73,11 @@ def build_detailed_body(goal: SavingsGoal, headline: str, extra_lines=None) -> s
         daily_required = (remaining / Decimal(days_left)) if remaining > 0 else Decimal("0")
         monthly_required = daily_required * Decimal("30")
 
-    # Simple status heuristic (no start_date in model yet)
     status_label = "On Track"
     if days_left is not None and days_left > 0:
         if pct < 50 and days_left < 15:
             status_label = "Behind Schedule"
 
-    # Contribution summaries
     c7_count, c7_total, c7_last = contribution_summary(goal, days=7)
     c30_count, c30_total, c30_last = contribution_summary(goal, days=30)
 
@@ -144,7 +143,6 @@ def send_contribution_added(goal: SavingsGoal, added_amount: Decimal):
     if not getattr(user, "email", None):
         return
 
-    # unique per day + goal + amount
     key = f"CONTRIB_{timezone.localdate().isoformat()}_{goal.id}_{int(added_amount)}"
     if _already_sent(user, goal, key):
         return
@@ -156,7 +154,7 @@ def send_contribution_added(goal: SavingsGoal, added_amount: Decimal):
     body = build_detailed_body(goal, headline=headline, extra_lines=extra)
 
     try:
-        send_mail(subject, body, None, [user.email])
+        send_mail(subject, body, None, [user.email], fail_silently=False)
         _log(user, goal, key, meta={"type": "contribution_added", "added": float(added_amount)})
     except Exception as e:
         _log(user, goal, key, meta={"error": str(e)}, status="failed")
@@ -179,7 +177,7 @@ def maybe_send_thresholds(goal: SavingsGoal):
             body = build_detailed_body(goal, headline=headline, extra_lines=extra)
 
             try:
-                send_mail(subject, body, None, [user.email])
+                send_mail(subject, body, None, [user.email], fail_silently=False)
                 _log(user, goal, key, meta={"pct": pct, "threshold": threshold})
             except Exception as e:
                 _log(user, goal, key, meta={"error": str(e)}, status="failed")
@@ -204,7 +202,269 @@ def send_goal_achieved(goal: SavingsGoal):
     body = build_detailed_body(goal, headline=headline, extra_lines=extra)
 
     try:
-        send_mail(subject, body, None, [user.email])
+        send_mail(subject, body, None, [user.email], fail_silently=False)
         _log(user, goal, key, meta={"saved": float(goal.saved_amount or 0)})
     except Exception as e:
         _log(user, goal, key, meta={"error": str(e)}, status="failed")
+
+
+# =========================================================
+# EMERGENCY FUNDS MODULE
+# =========================================================
+
+def _event_model_has_field(field_name: str) -> bool:
+    try:
+        return any(f.name == field_name for f in NotificationEvent._meta.get_fields())
+    except Exception:
+        return False
+
+
+def _goal_field_nullable() -> bool:
+    try:
+        goal_field = NotificationEvent._meta.get_field("goal")
+        return getattr(goal_field, "null", False)
+    except Exception:
+        return False
+
+
+def _already_sent_emergency(user, fund: EmergencyFund, event_key: str) -> bool:
+    if _event_model_has_field("emergency_fund"):
+        return NotificationEvent.objects.filter(
+            user=user, emergency_fund=fund, event_key=event_key
+        ).exists()
+
+    try:
+        return NotificationEvent.objects.filter(
+            user=user, event_key=event_key, meta__fund_id=fund.id
+        ).exists()
+    except Exception:
+        return False
+
+
+def _log_emergency(user, fund: EmergencyFund, event_key: str, meta=None, status="sent"):
+    meta = meta or {}
+    meta.setdefault("module", "emergency")
+    meta.setdefault("fund_id", fund.id)
+    meta.setdefault("fund_name", getattr(fund, "name", ""))
+
+    try:
+        if _event_model_has_field("emergency_fund"):
+            return NotificationEvent.objects.create(
+                user=user,
+                emergency_fund=fund,
+                event_key=event_key,
+                event_date=timezone.localdate(),
+                channel="email",
+                status=status,
+                meta=meta,
+            )
+
+        if _goal_field_nullable():
+            return NotificationEvent.objects.create(
+                user=user,
+                goal=None,
+                event_key=event_key,
+                event_date=timezone.localdate(),
+                channel="email",
+                status=status,
+                meta=meta,
+            )
+
+        return None
+    except Exception:
+        return None
+
+
+def emergency_interval_delta(interval: str) -> timedelta:
+    s = (interval or "monthly").lower()
+    if s == "weekly":
+        return timedelta(days=7)
+    if s == "monthly":
+        return timedelta(days=30)
+    if s == "quarterly":
+        return timedelta(days=90)
+    if s == "halfyearly":
+        return timedelta(days=182)
+    if s == "yearly":
+        return timedelta(days=365)
+    return timedelta(days=30)
+
+
+def _fmt_inr(n: Decimal) -> str:
+    try:
+        return f"{int(n):,}"
+    except Exception:
+        return str(n)
+
+
+# ✅ 1) EMAIL WHEN FUND IS CREATED (even if saved_amount = 0)
+def send_emergency_created_email(fund: EmergencyFund):
+    user = fund.user
+    if not user or not getattr(user, "email", None):
+        return
+
+    # one time per fund
+    key = f"EM_CREATED_{fund.id}"
+    if _already_sent_emergency(user, fund, key):
+        return
+
+    target = Decimal(fund.target_amount or 0)
+    saved = Decimal(fund.saved_amount or 0)
+    remaining = max(target - saved, Decimal("0"))
+    pct = int((saved / target) * 100) if target > 0 else 0
+
+    subject = f"🛡️ Emergency Fund Created: {fund.name}"
+    text = (
+        f"✅ Your emergency fund is created successfully!\n\n"
+        f"Fund: {fund.name}\n"
+        f"Target: ₹{_fmt_inr(target)}\n"
+        f"Current Saved: ₹{_fmt_inr(saved)}\n"
+        f"Remaining: ₹{_fmt_inr(remaining)}\n"
+        f"Interval: {fund.interval}\n"
+    )
+
+    html = f"""
+    <div style="font-family: Arial, sans-serif; line-height:1.6; color:#0b1220;">
+      <h2 style="margin:0 0 8px;">🛡️ Emergency Fund Created!</h2>
+      <p style="margin:0 0 12px;">Your new fund <b>{fund.name}</b> is ready ✅</p>
+
+      <div style="padding:14px; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc;">
+        <p style="margin:0;"><b>Target:</b> ₹{_fmt_inr(target)}</p>
+        <p style="margin:6px 0 0;"><b>Saved:</b> ₹{_fmt_inr(saved)}</p>
+        <p style="margin:6px 0 0;"><b>Remaining:</b> ₹{_fmt_inr(remaining)}</p>
+        <p style="margin:6px 0 0;"><b>Interval:</b> {fund.interval}</p>
+
+        <div style="margin-top:10px; background:#e2e8f0; border-radius:999px; overflow:hidden; height:12px;">
+          <div style="width:{min(pct,100)}%; background:#3b82f6; height:12px;"></div>
+        </div>
+        <p style="margin:8px 0 0; font-size:13px; color:#334155;">
+          Start small — ₹50 today is better than ₹0 tomorrow 💙
+        </p>
+      </div>
+    </div>
+    """
+
+    try:
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text,
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+            to=[user.email],
+        )
+        msg.attach_alternative(html, "text/html")
+        sent_count = msg.send(fail_silently=False)
+
+        if sent_count != 1:
+            _log_emergency(user, fund, key, meta={"type": "emergency_created", "error": "send returned 0"}, status="failed")
+            return
+
+        _log_emergency(user, fund, key, meta={"type": "emergency_created", "sent_count": sent_count}, status="sent")
+    except Exception as e:
+        _log_emergency(user, fund, key, meta={"type": "emergency_created", "error": str(e)}, status="failed")
+
+
+# ✅ 2) EMAIL WHEN SAVING IS ADDED (saved_amount increases)
+def send_emergency_success_email(fund: EmergencyFund, added_amount: Decimal):
+    user = fund.user
+    if not getattr(user, "email", None):
+        return
+
+    key = f"EM_ADD_{timezone.localdate().isoformat()}_{fund.id}_{int(Decimal(added_amount or 0))}"
+    if _already_sent_emergency(user, fund, key):
+        return
+
+    target = Decimal(fund.target_amount or 0)
+    saved = Decimal(fund.saved_amount or 0)
+    remaining = max(target - saved, Decimal("0"))
+    pct = int((saved / target) * 100) if target > 0 else 0
+
+    subject = f"✅ Emergency Fund Updated: {fund.name} ({pct}% done)"
+    text = (
+        f"🎉 Saving added successfully!\n\n"
+        f"Fund: {fund.name}\n"
+        f"Added: ₹{_fmt_inr(Decimal(added_amount or 0))}\n"
+        f"Saved: ₹{_fmt_inr(saved)} / ₹{_fmt_inr(target)}\n"
+        f"Remaining: ₹{_fmt_inr(remaining)}\n"
+        f"Progress: {pct}%\n"
+    )
+
+    html = f"""
+    <div style="font-family: Arial, sans-serif; line-height:1.6; color:#0b1220;">
+      <h2 style="margin:0 0 8px;">🎉 Saving Added Successfully!</h2>
+      <p style="margin:0 0 12px;">You just strengthened your safety net in <b>{fund.name}</b> 🛡️</p>
+
+      <div style="padding:14px; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc;">
+        <p style="margin:0;"><b>Added:</b> ₹{_fmt_inr(Decimal(added_amount or 0))}</p>
+        <p style="margin:6px 0 0;"><b>Saved:</b> ₹{_fmt_inr(saved)} / ₹{_fmt_inr(target)}</p>
+        <p style="margin:6px 0 0;"><b>Remaining:</b> ₹{_fmt_inr(remaining)}</p>
+
+        <div style="margin-top:10px; background:#e2e8f0; border-radius:999px; overflow:hidden; height:12px;">
+          <div style="width:{min(pct,100)}%; background:#22c55e; height:12px;"></div>
+        </div>
+
+        <p style="margin:8px 0 0; font-size:13px; color:#334155;">
+          🚀 You’re <b>{pct}%</b> close to your target.
+        </p>
+      </div>
+    </div>
+    """
+
+    try:
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text,
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+            to=[user.email],
+        )
+        msg.attach_alternative(html, "text/html")
+
+        sent_count = msg.send(fail_silently=False)
+        if sent_count != 1:
+            _log_emergency(user, fund, key, meta={"type": "emergency_success", "error": "send returned 0"}, status="failed")
+            return
+
+        _log_emergency(user, fund, key, meta={"type": "emergency_success", "added": float(Decimal(added_amount or 0))}, status="sent")
+    except Exception as e:
+        _log_emergency(user, fund, key, meta={"type": "emergency_success", "error": str(e)}, status="failed")
+
+
+# ✅ 3) EMAIL WHEN USER MISSES INTERVAL (daily celery checks this)
+def send_emergency_missed_interval_email(fund: EmergencyFund, days_overdue: int):
+    user = fund.user
+    if not getattr(user, "email", None):
+        return
+
+    key = f"EM_MISSED_{timezone.localdate().isoformat()}_{fund.id}"
+    if _already_sent_emergency(user, fund, key):
+        return
+
+    target = Decimal(fund.target_amount or 0)
+    saved = Decimal(fund.saved_amount or 0)
+    remaining = max(target - saved, Decimal("0"))
+    pct = int((saved / target) * 100) if target > 0 else 0
+
+    subject = f"⏰ Reminder: Add to {fund.name} ({pct}% complete)"
+    text = (
+        f"⏰ Friendly reminder!\n\n"
+        f"You haven’t added savings to '{fund.name}' within your selected interval.\n"
+        f"Saved: ₹{_fmt_inr(saved)} / ₹{_fmt_inr(target)}\n"
+        f"Remaining: ₹{_fmt_inr(remaining)}\n"
+        f"Overdue: {int(days_overdue)} day(s)\n"
+    )
+
+    try:
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text,
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+            to=[user.email],
+        )
+
+        sent_count = msg.send(fail_silently=False)
+        if sent_count != 1:
+            _log_emergency(user, fund, key, meta={"type": "emergency_missed", "error": "send returned 0"}, status="failed")
+            return
+
+        _log_emergency(user, fund, key, meta={"type": "emergency_missed", "days_overdue": int(days_overdue)}, status="sent")
+    except Exception as e:
+        _log_emergency(user, fund, key, meta={"type": "emergency_missed", "error": str(e)}, status="failed")

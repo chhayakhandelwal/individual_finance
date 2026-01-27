@@ -182,11 +182,12 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+EMAIL_TIMEOUT = 20
 
 EMAIL_HOST_USER = "rishikaa11aa@gmail.com"
 
-import os
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+#import os
+EMAIL_HOST_PASSWORD = "tjmhjyptpkexywiw"
 
 DEFAULT_FROM_EMAIL = f"Django Finance <rishikaa11aa@gmail.com>"
 
@@ -205,5 +206,10 @@ CELERY_BEAT_SCHEDULE = {
     "monthly-no-contribution-month-end": {
     "task": "core.tasks.month_end_no_contribution_alert",
     "schedule": crontab(day_of_month="28-31", hour=21, minute=0),  # 9:00 PM
+    },
+
+    "daily-emergency-interval-check": {
+        "task": "core.tasks.daily_emergency_interval_check",
+        "schedule": crontab(hour=9, minute=30),  # 9 PM IST
     },
 }

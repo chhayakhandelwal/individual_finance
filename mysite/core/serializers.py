@@ -190,7 +190,10 @@ class EmergencyFundSerializer(serializers.ModelSerializer):
             "name",
             "target_amount",
             "saved_amount",
+            "interval",
             "note",
+              "last_contribution_at",
+              "last_reminder_sent_at",
             "created_at",
             "updated_at",
         ]
