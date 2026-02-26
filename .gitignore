@@ -4,6 +4,8 @@ __pycache__/
 *.pyc
 db.sqlite3
 
+venv/
+
 # Django
 *.log
 media/
