@@ -8,3 +8,9 @@ psycopg2-binary
 python-dotenv
 certifi
 requests
+pdfplumber
+pytesseract
+Pillow
+opencv-python-headless
+numpy
+joblib
